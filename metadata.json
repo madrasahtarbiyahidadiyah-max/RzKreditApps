@@ -1,0 +1,6 @@
+{
+  "name": "RzKredit",
+  "description": "RzKredit Premium - RzKredit Mobile Administrasi Kredit Premium",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
