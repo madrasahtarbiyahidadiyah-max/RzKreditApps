@@ -15,18 +15,81 @@ class ExampleUnitTest {
   }
 
   @Test
-  fun generateMipmapIcons() {
-    val srcFile = File("src/main/res/drawable/app_logo.jpg")
-    val actualSrcFile = if (srcFile.exists()) srcFile else File("app/src/main/res/drawable/app_logo.jpg")
+  fun generateAllIcons() {
+    val imageUrl = "https://i.postimg.cc/vT94c1wx/logo-rzkredit.jpg"
+    val resDir = File("app/src/main/res")
+    val actualResDir = if (resDir.exists()) resDir else File("src/main/res")
     
-    if (!actualSrcFile.exists()) {
-      println("Source file does not exist: ${actualSrcFile.absolutePath}")
+    val drawableDir = File(actualResDir, "drawable")
+    drawableDir.mkdirs()
+    
+    val targetPng = File(drawableDir, "app_logo.png")
+    val tempJpg = File(drawableDir, "temp_logo.jpg")
+    
+    var imageDownloaded = false
+    
+    // 1. Try to download the latest image
+    try {
+      println("Downloading image from $imageUrl")
+      val url = URL(imageUrl)
+      val connection = url.openConnection() as HttpURLConnection
+      connection.requestMethod = "GET"
+      connection.connectTimeout = 10000
+      connection.readTimeout = 10000
+      connection.useCaches = false
+      connection.instanceFollowRedirects = true
+      
+      val responseCode = connection.responseCode
+      println("Response Code: $responseCode")
+      if (responseCode == HttpURLConnection.HTTP_OK) {
+        val inputStream = BufferedInputStream(connection.inputStream)
+        val outputStream = FileOutputStream(tempJpg)
+        val buffer = ByteArray(4096)
+        var bytesRead: Int
+        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+          outputStream.write(buffer, 0, bytesRead)
+        }
+        outputStream.flush()
+        outputStream.close()
+        inputStream.close()
+        println("Downloaded temporary image to ${tempJpg.absolutePath}")
+        imageDownloaded = true
+      }
+    } catch (e: Exception) {
+      println("Failed to download image via network: ${e.message}")
+    }
+    
+    // 2. Load the source image (downloaded one or fallback existing jpg)
+    val srcJpg = File(drawableDir, "app_logo.jpg")
+    val sourceFile = if (imageDownloaded && tempJpg.exists() && tempJpg.length() > 0) {
+      tempJpg
+    } else if (srcJpg.exists()) {
+      println("Using existing fallback app_logo.jpg")
+      srcJpg
+    } else {
+      println("No source image found to generate icons!")
       return
     }
     
-    println("Generating mipmap icons from ${actualSrcFile.absolutePath}")
-    val originalImage = javax.imageio.ImageIO.read(actualSrcFile)
+    // Decode and save as high-quality PNG
+    val originalImage = javax.imageio.ImageIO.read(sourceFile)
+    if (originalImage == null) {
+      println("Failed to decode the source image!")
+      return
+    }
     
+    // Write out the PNG resource
+    javax.imageio.ImageIO.write(originalImage, "png", targetPng)
+    println("Saved high-quality app_logo.png to ${targetPng.absolutePath}")
+    
+    // Clean up temporary files or old JPG to avoid duplicate resource names
+    if (tempJpg.exists()) tempJpg.delete()
+    if (srcJpg.exists()) {
+      srcJpg.delete()
+      println("Deleted legacy app_logo.jpg to prevent resource duplication")
+    }
+    
+    // 3. Generate mipmaps (ic_launcher.png and ic_launcher_round.png)
     val densities = mapOf(
       "mdpi" to 48,
       "hdpi" to 72,
@@ -35,11 +98,9 @@ class ExampleUnitTest {
       "xxxhdpi" to 192
     )
     
-    val resDir = actualSrcFile.parentFile.parentFile // res folder
-    
     for ((density, size) in densities) {
-      val targetDir = File(resDir, "mipmap-$density")
-      targetDir.mkdirs()
+      val mipmapDir = File(actualResDir, "mipmap-$density")
+      mipmapDir.mkdirs()
       
       // Create high-quality scaled icon
       val scaledImage = java.awt.image.BufferedImage(size, size, java.awt.image.BufferedImage.TYPE_INT_ARGB)
@@ -49,59 +110,16 @@ class ExampleUnitTest {
       g2d.drawImage(originalImage, 0, 0, size, size, null)
       g2d.dispose()
       
-      val targetFile = File(targetDir, "ic_launcher.png")
+      val targetFile = File(mipmapDir, "ic_launcher.png")
       javax.imageio.ImageIO.write(scaledImage, "png", targetFile)
       println("Created: ${targetFile.absolutePath}")
       
-      val targetFileRound = File(targetDir, "ic_launcher_round.png")
+      // Also generate a masked round version if desired, but since original is already round, we just use same high quality image
+      val targetFileRound = File(mipmapDir, "ic_launcher_round.png")
       javax.imageio.ImageIO.write(scaledImage, "png", targetFileRound)
       println("Created: ${targetFileRound.absolutePath}")
     }
-  }
-
-  @Test
-  fun downloadAppIcon() {
-    val imageUrl = "https://i.postimg.cc/vT94c1wx/logo-rzkredit.jpg"
-    try {
-      println("Downloading image from $imageUrl")
-      val url = URL(imageUrl)
-      val connection = url.openConnection() as HttpURLConnection
-      connection.requestMethod = "GET"
-      connection.connectTimeout = 8000
-      connection.readTimeout = 8000
-      connection.useCaches = false
-      connection.instanceFollowRedirects = true
-      
-      val responseCode = connection.responseCode
-      println("Response Code: $responseCode")
-      if (responseCode == HttpURLConnection.HTTP_OK) {
-        val inputStream = BufferedInputStream(connection.inputStream)
-        val targetFile = File("src/main/res/drawable/app_logo.jpg")
-        val rootTargetFile = if (!targetFile.parentFile.exists()) {
-          File("app/src/main/res/drawable/app_logo.jpg")
-        } else {
-          targetFile
-        }
-        println("Saving to ${rootTargetFile.absolutePath}")
-        
-        rootTargetFile.parentFile?.mkdirs()
-        
-        val outputStream = FileOutputStream(rootTargetFile)
-        val buffer = ByteArray(4096)
-        var bytesRead: Int
-        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-          outputStream.write(buffer, 0, bytesRead)
-        }
-        outputStream.flush()
-        outputStream.close()
-        inputStream.close()
-        println("Successfully downloaded and saved the image! Size: ${rootTargetFile.length()} bytes")
-        assertTrue(rootTargetFile.exists() && rootTargetFile.length() > 0)
-      } else {
-        println("HTTP connection failed with code: $responseCode (expected in sandboxed test runs)")
-      }
-    } catch (e: Exception) {
-      println("Failed to download image: ${e.message} (expected in sandboxed test runs due to network blocklist)")
-    }
+    
+    assertTrue(targetPng.exists() && targetPng.length() > 0)
   }
 }
