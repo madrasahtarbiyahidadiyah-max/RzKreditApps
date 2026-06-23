@@ -23,7 +23,6 @@ jobs:
     - name: Create .env file
       run: cp .env.example .env
 
-    # --- INI SENJATA BARUNYA: Membuat file debug.keystore buatan sendiri di dalam server ---
     - name: Generate Dummy Debug Keystore
       run: |
         keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "C=US, O=Android, CN=Android Debug"
@@ -35,3 +34,10 @@ jobs:
 
     - name: Build Application
       run: gradle assembleDebug
+
+    # --- INI FITUR DOWNLOADNYA (Menangkap file .apk yang sudah jadi) ---
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: RzKreditApps-Debug-APK
+        path: app/build/outputs/apk/debug/*.apk
