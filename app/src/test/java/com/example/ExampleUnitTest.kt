@@ -61,7 +61,7 @@ class ExampleUnitTest {
 
   @Test
   fun downloadAppIcon() {
-    val imageUrl = "https://i.postimg.cc/3x9HWhJ2/Whats-App-Image-2026-06-02-at-10-33-41.jpg"
+    val imageUrl = "https://i.postimg.cc/vT94c1wx/logo-rzkredit.jpg"
     try {
       println("Downloading image from $imageUrl")
       val url = URL(imageUrl)

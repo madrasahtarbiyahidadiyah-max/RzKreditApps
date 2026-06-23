@@ -159,7 +159,7 @@ fun DashboardScreen(
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
-                                .data("https://i.postimg.cc/3x9HWhJ2/Whats-App-Image-2026-06-02-at-10-33-41.jpg")
+                                .data("https://i.postimg.cc/vT94c1wx/logo-rzkredit.jpg")
                                 .placeholder(R.drawable.app_logo)
                                 .error(R.drawable.app_logo)
                                 .fallback(R.drawable.app_logo)
