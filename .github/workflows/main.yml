@@ -14,21 +14,21 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up JDK 17
+    # 1. UPGRADE ke JDK 21 (Syarat mutlak untuk menjalankan Gradle 9.x)
+    - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'temurin'
 
     - name: Create .env file
       run: cp .env.example .env
 
-    # Menyuruh server GitHub mengunduh dan memasang mesin Gradle v8.7 secara mandiri
+    # 2. UPGRADE versi Gradle dari 8.7 menjadi 9.3.1 sesuai permintaan log
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: '8.7'
+        gradle-version: '9.3.1'
 
-    # Merakit aplikasi menggunakan perintah 'gradle' murni (tanpa gradlew)
     - name: Build Application
       run: gradle assembleDebug
