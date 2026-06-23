@@ -92,6 +92,9 @@ fun LoginScreen(
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data("https://i.postimg.cc/3x9HWhJ2/Whats-App-Image-2026-06-02-at-10-33-41.jpg")
+                        .placeholder(R.drawable.app_logo)
+                        .error(R.drawable.app_logo)
+                        .fallback(R.drawable.app_logo)
                         .crossfade(true)
                         .build(),
                     contentDescription = "Logo",
